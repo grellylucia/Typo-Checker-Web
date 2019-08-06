@@ -15,7 +15,7 @@ html, body {
 
 .nav-style {
     background-color: #fffafb;
-    height: 90px;
+    height: 70px;
 }
 
 ::placeholder {
@@ -65,7 +65,7 @@ label {
 .title {
     font-size: 40px;
     color: #5e6163 !important;
-    font-weight: 700;
+    font-weight: 500;
     font-family: 'Archivo Black', sans-serif;
     padding-top: 42px;
     padding-bottom: 11px;
@@ -160,9 +160,10 @@ label {
     display: none;
     text-align: center;
     color: #999999;
-    font-size: 20px;
+    font-size: 30px;
     line-height: 100px;
     height: 100px;
+    justify-content: center;
 }
 
 .icon-position {
@@ -203,9 +204,9 @@ label {
     font-size: 16px;
 }
 
-@media (min-width: 1300px) {
+@media (min-width: 1200px) {
     .content {
-        width: 1270px;
+        width: 1070px;
     }
 }
 
@@ -213,3 +214,4 @@ label {
     font-size: 12px;
     font-family: 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;
 }
+

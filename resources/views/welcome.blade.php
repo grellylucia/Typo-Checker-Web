@@ -30,6 +30,7 @@
                     <h2 class="description-section center-text">Cek kesalahan penulisan kata pada dokumen anda</h2>
 
                     <div class="textbox-outer upload-box">
+                        <div id="pdfUpload"> Upload File... </div>
                         <label for="inputFile">
                             <img src="{{URL::asset('/images/icons8-upload-100 (5).png')}}" width="100" height="100" class="icon-position" alt="">  
                             <p class="second-text center-text">Letakan file pdf disini atau klik tombol di bawah</p>
@@ -45,7 +46,7 @@
                     <div class="bottom-section"></div>
                 </div>
 
-                <div id="pdfUpload"> Upload File... </div>
+               
                 <div id="pdf"></div>
             <!-- </div> -->
             
