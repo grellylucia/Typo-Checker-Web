@@ -49,7 +49,9 @@ label {
     display: block;
     cursor: pointer;
     text-align: center;
-    margin-top: 5%;
+    /* margin-top: 10%; */
+    padding-top: 7%;
+    height: 360px;
 }
 
 .header {
@@ -95,7 +97,7 @@ label {
     color: #FFF;
     font-size: 16px;
     font-weight: 600;
-    letter-spacing: 1px;
+    /* letter-spacing: 1px; */
     padding: 13px 17px;
     position: relative;
     text-align: center;
@@ -116,6 +118,7 @@ label {
 
 .content {
     margin: 0 auto;
+    width: 1200px;
 }
 
 .textbox-inner {
@@ -127,13 +130,6 @@ label {
 .upload-box {
     display: block;
     position: relative;
-}
-
-.textbox-outer {
-    margin: 57px 60px 0;
-    border: 2px dashed #b3cdfa;
-    min-height: 360px;
-    /* display: none; */
 }
 
 .out-wrapper {
@@ -154,16 +150,6 @@ label {
 .second-text {
     font-weight: 500px;
     font-size: 18px;
-}
-
-#pdfUpload {
-    display: none;
-    text-align: center;
-    color: #999999;
-    font-size: 30px;
-    line-height: 100px;
-    height: 100px;
-    justify-content: center;
 }
 
 .icon-position {
@@ -204,9 +190,9 @@ label {
     font-size: 16px;
 }
 
-@media (min-width: 1200px) {
+@media (max-width: 1199px) {
     .content {
-        width: 1070px;
+        width: 96%;
     }
 }
 
@@ -215,3 +201,54 @@ label {
     font-family: 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;
 }
 
+.pdfUpload {
+    display: none;
+    text-align: center;
+    color: #999999;
+    font-size: 30px;
+    line-height: 100px;
+    height: 100px;
+    justify-content: center;
+}
+
+.box-dragndrop,
+.box-result {
+    display: none;
+}
+
+/* .textbox-outer {
+    margin: 57px 60px 0;
+    border: 2px dashed #b3cdfa;
+    min-height: 360px;
+    display: none;
+} */
+
+.box.textbox-outer {
+    margin: 57px 60px 0;
+    outline: 2px dashed #b3cdfa;
+    min-height: 360px;
+    background-color: white;
+    outline-offset: -10px;
+    transition: outline-offset .15s ease-in-out, background-color .15s linear;
+}
+
+.box.textbox-outer .box-dragndrop {
+    display: inline;
+}
+
+.box {
+    position: relative;
+    background-color: #FFF;
+}
+
+.box.is-dragover {
+    background-color: #e0e0e0;
+}
+
+.box.is-uploading .box-input {
+    visibility: none;
+}
+
+.box.is-uploading .pdfUpload {
+    display: block;
+}
