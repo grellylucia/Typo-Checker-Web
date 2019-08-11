@@ -43,24 +43,9 @@
                         <div class="pdfUpload"> Upload File&hellip;</div>
                     </form>
 
-                    <!-- <div class="textbox-outer upload-box">
-                        <div id="pdfUpload"> Upload File... </div>
-                        <label for="inputFile">
-                            <img src="{{URL::asset('/images/icons8-upload-100 (5).png')}}" width="100" height="100" class="icon-position" alt="">  
-                            <p class="second-text center-text">Letakan file pdf disini atau klik tombol di bawah</p>
-                            <div class="btn-wrapper btn-position">
-                                <button type="submit" id="btnUpload" class="btn btn-primary btn-style">Pilih Dokumen</button>
-                            </div>
-                        </label>
-                        <form id="uploadDoc" class="hide">
-                            <input type="file" id="inputFile" accept="application/pdf" />
-                        </form>
-                    </div>  -->
-
                     <div class="bottom-section"></div>
                 </div>
 
-               
                 <div id="pdf"></div>
             <!-- </div> -->
             
@@ -84,6 +69,14 @@
     <script type="text/javascript" src="https://mozilla.github.io/pdf.js/build/pdf.worker.js"></script>
    
     <script id="script" tpye="text/javascript">
+        $(document).ready(function(){
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            })
+        });
+
         var isAdvancedUpload = function() {
             var div = document.createElement('div');
             return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
@@ -91,7 +84,8 @@
 
         var $form = $('.box');
         var $pdf_url = false;
-
+        var docText = [];
+        
         if (isAdvancedUpload) {
             $form.addClass('textbox-outer');
         }
@@ -142,7 +136,6 @@
             $input.on('change',function(e) {
                 var val = $(this).val().toLowerCase(),
                 regex = new RegExp("(.*?)\.(docx|doc|pdf)$");
-
                 if (!(regex.test(val))) {
                     $(this).val('');
                     alert('Ekstensi dokumen harus pdf atau docx / doc');
@@ -164,10 +157,45 @@
             if (isAdvancedUpload) {
                 // ajax for modern browsers
                 e.preventDefault();
+                
+                var temp = {url: $pdf_url}
+               
 
-                var fileUrl = {url: $pdf_url};
+                var test = pdfjsLib.getDocument(temp).then(function(pdf) {
+                    var pdfDocument = pdf;
+                    var pagesPromises = [];
 
-                console.log(fileUrl);
+                    for(var i = 0; i <  pdf.numPages; i++) {
+                        (function (pageNumber) {
+                            pagesPromises.push(getPageText(pageNumber, pdfDocument));                            
+                        }) (i+1);
+                    }
+                    
+                    return Promise.all(pagesPromises).then((pageText) => {
+                        return pageText
+                    })
+
+                }).catch(err => {
+                    console.log(err.response);
+                })
+                
+                test.then(response => {
+                    $.ajax({
+                        type: "POST",
+                        url: "http://localhost/input/check-words",
+                        data: '{"text":"'+response[0]+'"}',
+                        contentType: 'application/json; charset=utf-8',
+                        datatype: "json",
+                        success: function(data) {
+                            var dataTemp = data['results'].result;
+                            console.log(dataTemp);
+                        },
+                        error: function() {
+                            alert("Terjadi kesalahan");
+                        }
+                    })
+                    
+                })
 
                 // var ajaxData = new FormData($form.get(0));
                 // $.ajax({
@@ -210,77 +238,81 @@
             }
         });
 
+        function getPageText(pageNum, pdfDoc) {
+            return new Promise(function (resolve, reject){
+                pdfDoc.getPage(pageNum).then(function(pdfPage) {
+                    pdfPage.getTextContent().then(function (textContent) {
+                        var textItems = textContent.items;
+                        var finalString = "";
+
+                        for(var i = 0; i < textItems.length; i++) {
+                            var item = textItems[i];
+                            finalString += item.str
+                            $("#pdf").append(finalString);
+                            // str_pdf += o.str;
+                            // str_pdf = str_pdf.replace("  "," ");
+                        }
+
+                        resolve(finalString);
+                    });
+                });
+            });
+        }
+
+        // async function getPdfText(pdf_url) {
+        //     await pdfjsLib.getDocument({url: pdf_url})
+        //         .then(function(pdf){
+        //             for(var i = 0; i < pdf.numPages; i++) {
+        //                 return pdf.getPage(i+1)
+        //             }
+        //         })
+        //         .then(function(page) { 
+        //             getText = page.getTextContent()
+        //             .then(function(textContent){
+                        
+        //                 textContent.items.forEach(function(o) {
+        //                     str_pdf += o.str;
+        //                     str_pdf = str_pdf.replace("  "," ");
+        //                 })
+        //                 // $("#pdf").append(str_pdf);
+        //                 // console.log(str_pdf);
+        //                 temp = str_pdf;
+        //                 // console.log(temp);
+        //                 return temp;    
+        //             }); 
+        //         })
+                
+        //     }
+
+        // function getPdfText(pdf_url) {
+        //     $("pdfUpload").show();
+        //     var pdf = pdfjsLib.getDocument({url: pdf_url});
+
+        //     pdf.then(getPages)
+        // }
+
+        // function getPages(pdf) {
+        //     for(var i = 0; i <  pdf.numPages; i++) {
+        //         pdf.getPage(i+1).then(getPageText);
+        //     }
+        // }
+
+        // function getPageText(page) {
+        //     var str_pdf = '';
+        //     $("pdfUpload").hide();
+        //     page.getTextContent().then(function(textContent){
+        //         textContent.items.forEach(function(o) {
+        //             $("#pdf").append(o.str + '');
+        //             str_pdf += o.str; 
+        //         });
+        //         console.log(str_pdf);
+        //     });
+            
+        // }
+
         // $("#btnUpload").on('click', function() {
         //     $("#inputFile").trigger('click');
         // });
-
-        // $("#inputFile").on('change', function() {
-        //     if(['application/pdf'].indexOf($("#inputFile").get(0).files[0].type) == -1 ) {
-        //         alert('Error: Not a PDF');
-        //         return;
-        //     }
-        //     getPdfText(URL.createObjectURL($("#inputFile").get(0).files[0]));
-        //     // console.log(str_pdf);
-        //     // console.log(result);
-        //     // var test = document.getElementById("pdf");
-        //     // var test2 = $("#pdf").val();
-        //     // console.log(test);
-        // });
-
-
-
-    // getPdfText = function (pdf_url) {
-    //     $("#pdfUpload").show();
-    //     return pdfjsLib.getDocument({url: pdf_url})
-    //         .then(function(pdf){
-    //             for(var i = 0; i < pdf.numPages; i++) {
-    //                 return pdf.getPage(i+1)
-    //             }
-    //         }).then(function(page) {
-    //             $("#pdfUpload").hide();
-    //             getText = page.getTextContent().then(function(textContent){
-    //                 var str_pdf = '';
-    //                 textContent.items.forEach(function(o) {
-    //                     str_pdf += o.str;
-    //                     str_pdf = str_pdf.replace("  "," ");
-    //                 })
-    //                 // $("#pdf").append(str_pdf);
-    //                 console.log(str_pdf);
-    //                 return str_pdf;
-    //             });
-    //             // return getText; 
-    //         })
-    //     }
-
-        function getPdfText(pdf_url) {
-            $("pdfUpload").show();
-            var pdf = pdfjsLib.getDocument({url: pdf_url});
-
-            pdf.then(getPages)
-        }
-
-        function getPages(pdf) {
-            for(var i = 0; i <  pdf.numPages; i++) {
-                pdf.getPage(i+1).then(getPageText);
-            }
-        }
-
-        function getPageText(page) {
-            var str_pdf = '';
-            $("pdfUpload").hide();
-            page.getTextContent().then(function(textContent){
-                textContent.items.forEach(function(o) {
-                    $("#pdf").append(o.str + '');
-                    str_pdf += o.str; 
-                });
-                console.log(str_pdf);
-            });
-            
-        }
-
-        $("#btnUpload").on('click', function() {
-            $("#inputFile").trigger('click');
-        });
 
         // $("#inputFile").on('change', function() {
         //     if(['application/pdf'].indexOf($("#inputFile").get(0).files[0].type) == -1 ) {
