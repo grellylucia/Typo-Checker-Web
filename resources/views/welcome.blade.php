@@ -149,6 +149,18 @@
 
         }
 
+        function handleData (data) {
+            data.forEach(function(item) {
+                var word = "";
+                if (!item.status) {
+                    word = "<span class='highlight'>"+item.text+"</span>"
+                }else{
+                    word = "<span>"+item.text+"</span>"
+                }
+                $('#pdf').append(word + " ")
+            });
+        }
+
         $form.on('submit', function(e) {
             if ($form.hasClass('is-uploading')) return false;
 
@@ -159,64 +171,38 @@
                 e.preventDefault();
                 
                 var temp = {url: $pdf_url}
-               
 
-                var test = pdfjsLib.getDocument(temp).then(function(pdf) {
-                    var pdfDocument = pdf;
-                    var pagesPromises = [];
+                var test = pdfjsLib.getDocument(temp)
+                    .then(function(pdf) {
+                        var pdfDocument = pdf;
+                        var pagesPromises = [];
 
-                    for(var i = 0; i <  pdf.numPages; i++) {
-                        (function (pageNumber) {
-                            pagesPromises.push(getPageText(pageNumber, pdfDocument));                            
-                        }) (i+1);
-                    }
-                    
-                    return Promise.all(pagesPromises).then((pageText) => {
-                        return pageText
-                    })
-
-                }).catch(err => {
-                    console.log(err.response);
-                })
-                
-                test.then(response => {
-                    $.ajax({
-                        type: "POST",
-                        url: "http://localhost/input/check-words",
-                        data: '{"text":"'+response[0]+'"}',
-                        contentType: 'application/json; charset=utf-8',
-                        datatype: "json",
-                        success: function(data) {
-                            var dataTemp = data['results'].result;
-                            console.log(dataTemp);
-                        },
-                        error: function() {
-                            alert("Terjadi kesalahan");
+                        for(var i = 0; i <  pdf.numPages; i++) {
+                            (function (pageNumber) {
+                                pagesPromises.push(getPageText(pageNumber, pdfDocument));                            
+                            }) (i+1);
                         }
+                        
+                        return Promise.all(pagesPromises)
                     })
-                    
-                })
-
-                // var ajaxData = new FormData($form.get(0));
-                // $.ajax({
-                //     url: $form.attr('action'),
-                //     type: $form.attr('method'),
-                //     data: ajaxData,
-                //     dataType: 'json',
-                //     cache: false,
-                //     contentType: false,
-                //     processData: false,
-                //     complete: function() {
-                //         $form.removeClass('is-uploading');
-                //     },
-                //     success: function(data) {
-                //         $form.addClass( data.success == true ? 'is-success' : 'is-error' );
-                //         if (!data.success) $errorMsg.text(data.error);
-                //     },
-                //     error: function() {
-                //     // Log the error, show an alert, whatever works for you
-                //     }
-                // });
+                    .then(function (pagePromises) {
+                        return pagePromises[0]
+                    })
+                    .then(function (data) {
+                        $.ajax({
+                            type: "POST",
+                            url: "http://localhost/input/check-words",
+                            data: '{"text":"'+data+'"}',
+                            contentType: 'application/json; charset=utf-8',
+                            datatype: "json",
+                            success: function(res) {
+                                handleData(res['results'].result);
+                            },
+                            error: function() {
+                                alert("Terjadi kesalahan");
+                            }
+                        })
+                    })
             } else {
                 // ajax for legacy browsers
                 var iframeName  = 'uploadiframe' + new Date().getTime();
@@ -248,9 +234,6 @@
                         for(var i = 0; i < textItems.length; i++) {
                             var item = textItems[i];
                             finalString += item.str
-                            $("#pdf").append(finalString);
-                            // str_pdf += o.str;
-                            // str_pdf = str_pdf.replace("  "," ");
                         }
 
                         resolve(finalString);

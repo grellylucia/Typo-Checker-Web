@@ -252,3 +252,7 @@ label {
 .box.is-uploading .pdfUpload {
     display: block;
 }
+
+.highlight {
+    background-color: #a6c1ee;
+}
