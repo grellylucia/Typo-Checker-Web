@@ -28,8 +28,10 @@
                 <div class="content content-center out-wrapper top-separator">
                     <h1 class="title center-text">Identifikasi Typo</h1>
                     <h2 class="description-section center-text">Cek kesalahan penulisan kata pada dokumen anda</h2>
-
+                    
                     <form class="box" method= "post" action="" enctype="multipart/form-data">
+                    
+                        <div id="pdf"></div>
                         <div class="box-input">
                             <label for="inputFile">
                                 <input type="file" id="inputFile" name="file" class="hide" />
@@ -42,11 +44,11 @@
                         </div>
                         <div class="pdfUpload"> Upload File&hellip;</div>
                     </form>
-
+                    <h2 class="time">Waktu : <div id="time"></div></h2>
                     <div class="bottom-section"></div>
                 </div>
 
-                <div id="pdf"></div>
+                
             <!-- </div> -->
             
             <footer class="footer">
@@ -70,6 +72,8 @@
    
     <script id="script" tpye="text/javascript">
         $(document).ready(function(){
+            $('#time').hide()
+            $('#pdf').hide()
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -135,10 +139,10 @@
 
             $input.on('change',function(e) {
                 var val = $(this).val().toLowerCase(),
-                regex = new RegExp("(.*?)\.(docx|doc|pdf)$");
+                regex = new RegExp("(.*?)\.(pdf)$");
                 if (!(regex.test(val))) {
                     $(this).val('');
-                    alert('Ekstensi dokumen harus pdf atau docx / doc');
+                    alert('Ekstensi dokumen harus pdf');
                 }
                 else {
                     showFile(e.target.files);
@@ -149,22 +153,32 @@
 
         }
 
-        function handleData (data) {
+        function handleData (data, time) {
             data.forEach(function(item) {
-                var word = "";
+                var word = "";  
                 if (!item.status) {
                     word = "<span class='highlight'>"+item.text+"</span>"
                 }else{
                     word = "<span>"+item.text+"</span>"
                 }
+                $('.pdfUpload').hide()
                 $('#pdf').append(word + " ")
+                
+                
             });
+            $('#time').append(time)
         }
-
+        
         $form.on('submit', function(e) {
             if ($form.hasClass('is-uploading')) return false;
 
                 $form.addClass('is-uploading').removeClass('is-error');
+
+                $('.box-input').hide()
+                
+                $('#pdf').show()
+
+                $('#time').show()
 
             if (isAdvancedUpload) {
                 // ajax for modern browsers
@@ -186,17 +200,23 @@
                         return Promise.all(pagesPromises)
                     })
                     .then(function (pagePromises) {
-                        return pagePromises[0]
+                        console.log(pagePromises)
+                        return pagePromises
+                        
                     })
                     .then(function (data) {
                         $.ajax({
                             type: "POST",
                             url: "http://localhost/input/check-words",
+                            // url: "http://grid.uajy.ac.id:5000/input/check-words",
                             data: '{"text":"'+data+'"}',
                             contentType: 'application/json; charset=utf-8',
-                            datatype: "json",
+                            datatype: "jsonp",
                             success: function(res) {
-                                handleData(res['results'].result);
+                                handleData(res['results'].result, res['results'].time);
+                                console.log(res['results'].time);
+                                console.log(res['results'].number_of_words)
+                                console.log(res['results'].typo)
                             },
                             error: function() {
                                 alert("Terjadi kesalahan");
@@ -242,30 +262,6 @@
             });
         }
 
-        // async function getPdfText(pdf_url) {
-        //     await pdfjsLib.getDocument({url: pdf_url})
-        //         .then(function(pdf){
-        //             for(var i = 0; i < pdf.numPages; i++) {
-        //                 return pdf.getPage(i+1)
-        //             }
-        //         })
-        //         .then(function(page) { 
-        //             getText = page.getTextContent()
-        //             .then(function(textContent){
-                        
-        //                 textContent.items.forEach(function(o) {
-        //                     str_pdf += o.str;
-        //                     str_pdf = str_pdf.replace("  "," ");
-        //                 })
-        //                 // $("#pdf").append(str_pdf);
-        //                 // console.log(str_pdf);
-        //                 temp = str_pdf;
-        //                 // console.log(temp);
-        //                 return temp;    
-        //             }); 
-        //         })
-                
-        //     }
 
         // function getPdfText(pdf_url) {
         //     $("pdfUpload").show();
@@ -292,25 +288,6 @@
         //     });
             
         // }
-
-        // $("#btnUpload").on('click', function() {
-        //     $("#inputFile").trigger('click');
-        // });
-
-        // $("#inputFile").on('change', function() {
-        //     if(['application/pdf'].indexOf($("#inputFile").get(0).files[0].type) == -1 ) {
-        //         alert('Error: Not a PDF');
-        //         return;
-        //     }
-        //     getPdfText(URL.createObjectURL($("#inputFile").get(0).files[0]));
-        //     // console.log(str_pdf);
-        //     // console.log(result);
-        //     // var test = document.getElementById("pdf");
-        //     // var test2 = $("#pdf").val();
-        //     // console.log(test);
-        // });
-
-        
 
     </script>
 
